@@ -161,7 +161,7 @@ export default class SRApiTool {
           }
         },
         saveDevice: {
-          url: `${Bbs_api}apihub/api/deviceLogin`,
+          url: `${Bbs_api}apihub/api/saveDevice`,
           body: {
             app_version: '2.73.1',
             device_id: data.deviceId,
