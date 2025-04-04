@@ -4,7 +4,6 @@ import MysSRApi from '../runtime/MysSRApi.js'
 import User from '../../genshin/model/user.js'
 import setting from '../utils/setting.js'
 import _ from 'lodash'
-import fetch from 'node-fetch'
 import {getCk, rulePrefix} from '../utils/common.js'
 import runtimeRender from '../common/runtimeRender.js'
 export class Month extends plugin {
@@ -50,16 +49,8 @@ export class Month extends plugin {
     }
 
     let api = new MysSRApi(uid, ck)
-    let deviceFp = await redis.get(`STARRAIL:DEVICE_FP:${uid}`)
-    if (!deviceFp) {
-      let sdk = api.getUrl('getFp')
-      let res = await fetch(sdk.url, { headers: sdk.headers, method: 'POST', body: sdk.body })
-      let fpRes = await res.json()
-      deviceFp = fpRes?.data?.device_fp
-      if (deviceFp) {
-        await redis.set(`STARRAIL:DEVICE_FP:${uid}`, deviceFp, { EX: 86400 * 7 })
-      }
-    }
+    let deviceFp = await api.getData('getFp')
+    deviceFp = deviceFp?.data?.device_fp
     const cardData = await api.getData('srMonth', { deviceFp })
     if (!cardData || cardData.retcode != 0) return e.reply(cardData.message || '请求数据失败')
     let data = cardData.data

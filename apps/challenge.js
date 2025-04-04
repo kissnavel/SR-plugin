@@ -1,4 +1,3 @@
-import fetch from 'node-fetch'
 import _ from 'lodash'
 import moment from 'moment'
 import User from '../../genshin/model/user.js'
@@ -65,13 +64,9 @@ export class Challenge extends plugin {
         return false
       }
     }
-    let sdk = api.getUrl('getFp')
-    let fpRes = await fetch(sdk.url, { headers: sdk.headers, method: 'POST', body: sdk.body })
-    fpRes = await fpRes.json()
-    let deviceFp = fpRes?.data?.device_fp
-    if (deviceFp) {
-      await redis.set(`STARRAIL:DEVICE_FP:${uid}`, deviceFp, { EX: 86400 * 7 })
-    }
+    let deviceFp = await api.getData('getFp')
+    deviceFp = deviceFp?.data?.device_fp
+
     let challengeData, res, simpleRes
     // 先查详细的
     if (!simple) {

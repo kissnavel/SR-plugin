@@ -1,4 +1,3 @@
-import { generateSeed } from './MysSRApi.js'
 import crypto from 'crypto'
 /**
  * derived from miao-yunzai
@@ -18,6 +17,15 @@ export default class SRApiTool {
   }
 
   getUrlMap = (data = {}) => {
+    const productName = data?.productName ?? 'J9110'
+    const deviceType = data?.deviceType ?? 'J9110'
+    const modelName = data?.modelName ?? 'J9110'
+    const oaid = data?.oaid ?? this.uuid
+    const osVersion = data?.osVersion ?? '11'
+    const deviceInfo = data?.deviceInfo ?? 'Sony/J9110/J9110:11/55.2.A.4.332/055002A004033203408384484:user/release-keys'
+    const board = data?.board ?? 'msmnile'
+    const deviceBrand = deviceInfo.split('/')[0]
+    const deviceDisplay = deviceInfo.split('/')[3]
     let host, hostRecord, hostPublicData
     if (['prod_gf_cn', 'prod_qd_cn'].includes(this.server)) {
       host = 'https://api-takumi.mihoyo.com/'
@@ -38,20 +46,20 @@ export default class SRApiTool {
           getFp: {
             url: `${hostPublicData}device-fp/api/getFp`,
             body: {
-              seed_id: `${generateSeed(16)}`,
-              device_id: data.deviceId,
-              platform: '1',
-              seed_time: new Date().getTime() + '',
-              ext_fields: `{"ramCapacity":"3746","hasVpn":"0","proxyStatus":"0","screenBrightness":"0.550","packageName":"com.miHoYo.mhybbs","romRemain":"100513","deviceName":"iPhone","isJailBreak":"0","magnetometer":"-160.495300x-206.488358x58.534348","buildTime":"1706406805675","ramRemain":"97","accelerometer":"-0.419876x-0.748367x-0.508057","cpuCores":"6","cpuType":"CPU_TYPE_ARM64","packageVersion":"2.20.1","gyroscope":"0.133974x-0.051780x-0.062961","batteryStatus":"45","appUpdateTimeDiff":"1707130080397","appMemory":"57","screenSize":"414×896","vendor":"--","model":"iPhone12,5","IDFV":"${data.deviceId.toUpperCase()}","romCapacity":"488153","isPushEnabled":"1","appInstallTimeDiff":"1696756955347","osVersion":"17.2.1","chargeStatus":"1","isSimInserted":"1","networkType":"WIFI"}`,
-              app_name: 'account_cn',
-              device_fp: '38d7f0fa36179'
+              app_name: 'bbs_cn',
+              bbs_device_id: `${this.uuid}`,
+              device_fp: '38d7faa51d2b6',
+              device_id: '35315696b7071100',
+              ext_fields: `{"proxyStatus":1,"isRoot":0,"romCapacity":"512","deviceName":"${modelName}","productName":"${productName}","romRemain":"456","hostname":"BuildHost","screenSize":"1096x2434","isTablet":0,"aaid":"${this.uuid}","model":"${modelName}","brand":"${deviceBrand}","hardware":"qcom","deviceType":"${deviceType}","devId":"REL","serialNumber":"unknown","sdCapacity":107433,"buildTime":"1633631032000","buildUser":"BuildUser","simState":1,"ramRemain":"96757","appUpdateTimeDiff":1722171241616,"deviceInfo":"${deviceInfo}","vaid":"${this.uuid}","buildType":"user","sdkVersion":"30","ui_mode":"UI_MODE_TYPE_NORMAL","isMockLocation":0,"cpuType":"arm64-v8a","isAirMode":0,"ringMode":2,"chargeStatus":1,"manufacturer":"${deviceBrand}","emulatorStatus":0,"appMemory":"512","osVersion":"${osVersion}","vendor":"unknown","accelerometer":"-0.084346995x8.73799x4.6301117","sdRemain":96600,"buildTags":"release-keys","packageName":"com.mihoyo.hyperion","networkType":"WiFi","oaid":"${oaid}","debugStatus":1,"ramCapacity":"107433","magnetometer":"-13.9125x-17.8875x-5.4750004","display":"${deviceDisplay}","appInstallTimeDiff":1717065300325,"packageVersion":"2.20.2","gyroscope":"0.017714571x-4.5813544E-4x0.0015271181","batteryStatus":77,"hasKeyboard":0,"board":"${board}"}`,
+              platform: '2',
+              seed_id: `${this.uuid}`,
+              seed_time: new Date().getTime() + ''
             },
             noDs: true
           },
           sign_info: {
             url: `${host}event/luna/info`,
-            query: `lang=zh-cn&act_id=e202304121516551&region=${this.server}&uid=${this.uid}`,
-            dsSalt: 'web'
+            query: `lang=zh-cn&act_id=e202304121516551&region=${this.server}&uid=${this.uid}`
           }
         } : {
           srUser: {
@@ -61,21 +69,20 @@ export default class SRApiTool {
           getFp: {
             url: `${hostPublicData}device-fp/api/getFp`,
             body: {
-              seed_id: `${this.uuid}`,
+              app_name: 'bbs_oversea',
+              device_fp: '38d7f2352506c',
               device_id: '35315696b7071100',
+              ext_fields: `{"proxyStatus":1,"isRoot":0,"romCapacity":"512","deviceName":"${modelName}","productName":"${productName}","romRemain":"474","hostname":"BuildHost","screenSize":"1096x2434","isTablet":0,"model":"${modelName}","brand":"${deviceBrand}","hardware":"qcom","deviceType":"${deviceType}","devId":"REL","serialNumber":"unknown","sdCapacity":107433,"buildTime":"1633631032000","buildUser":"BuildUser","simState":1,"ramRemain":"96715","appUpdateTimeDiff":1722171191009,"deviceInfo":"${deviceInfo}","buildType":"user","sdkVersion":"30","ui_mode":"UI_MODE_TYPE_NORMAL","isMockLocation":0,"cpuType":"arm64-v8a","isAirMode":0,"ringMode":2,"app_set_id":"${this.uuid}","chargeStatus":1,"manufacturer":"${deviceBrand}","emulatorStatus":0,"appMemory":"512","adid":"${this.uuid}","osVersion":"${osVersion}","vendor":"unknown","accelerometer":"-0.22372891x-1.5332011x9.802497","sdRemain":96571,"buildTags":"release-keys","packageName":"com.mihoyo.hoyolab","networkType":"WiFi","debugStatus":1,"ramCapacity":"107433","magnetometer":"3.73125x-10.668751x3.7687502","display":"${deviceDisplay}","appInstallTimeDiff":1716489549794,"packageVersion":"2.20.2","gyroscope":"0.18386503x-0.006413896x-0.008857286","batteryStatus":77,"hasKeyboard":0,"board":"${board}"}`,
               hoyolab_device_id: `${this.uuid}`,
               platform: '2',
-              seed_time: new Date().getTime() + '',
-              ext_fields: `{"proxyStatus":1,"isRoot":1,"romCapacity":"512","deviceName":"Xperia 1","productName":"J9110","romRemain":"483","hostname":"BuildHost","screenSize":"1096x2434","isTablet":0,"model":"J9110","brand":"Sony","hardware":"qcom","deviceType":"J9110","devId":"REL","serialNumber":"unknown","sdCapacity":107433,"buildTime":"1633631032000","buildUser":"BuildUser","simState":1,"ramRemain":"98076","appUpdateTimeDiff":1716545162858,"deviceInfo":"Sony\/J9110\/J9110:11\/55.2.A.4.332\/055002A004033203408384484:user\/release-keys","buildType":"user","sdkVersion":"30","ui_mode":"UI_MODE_TYPE_NORMAL","isMockLocation":0,"cpuType":"arm64-v8a","isAirMode":0,"ringMode":2,"app_set_id":"${this.uuid}","chargeStatus":1,"manufacturer":"Sony","emulatorStatus":0,"appMemory":"512","adid":"${this.uuid}","osVersion":"11","vendor":"unknown","accelerometer":"-0.9233304x7.574181x6.472585","sdRemain":97931,"buildTags":"release-keys","packageName":"com.mihoyo.hoyolab","networkType":"WiFi","debugStatus":1,"ramCapacity":"107433","magnetometer":"-9.075001x-27.300001x-3.3000002","display":"55.2.A.4.332","appInstallTimeDiff":1716489549794,"packageVersion":"","gyroscope":"0.027029991x-0.04459185x0.032222193","batteryStatus":45,"hasKeyboard":0,"board":"msmnile"}`,
-              app_name: 'bbs_oversea',
-              device_fp: '38d7f2352506c'
+              seed_id: `${this.uuid}`,
+              seed_time: new Date().getTime() + ''
             },
             noDs: true
           },
           sign_info: {
             url: `${host}event/luna/os/info`,
-            query: 'lang=zh-cn&act_id=e202303301540311',
-            dsSalt: 'web'
+            query: 'lang=zh-cn&act_id=e202303301540311'
           }
         }),
         srCharacterDetail: {

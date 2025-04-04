@@ -64,13 +64,8 @@ export class Rogue extends plugin {
       schedule_type = '2'
     }
 
-    let sdk = api.getUrl('getFp')
-    let fpRes = await fetch(sdk.url, { headers: sdk.headers, method: 'POST', body: sdk.body })
-    fpRes = await fpRes.json()
-    let deviceFp = fpRes?.data?.device_fp
-    if (deviceFp) {
-      await redis.set(`STARRAIL:DEVICE_FP:${uid}`, deviceFp, { EX: 86400 * 7 })
-    }
+    let deviceFp = await api.getData('getFp')
+    deviceFp = deviceFp?.data?.device_fp
     const { url, headers } = api.getUrl('srRogue', { deviceFp, schedule_type })
     delete headers['x-rpc-page']
     logger.debug({ url, headers })
@@ -121,13 +116,8 @@ export class Rogue extends plugin {
       return false
     }
     let api = new MysSRApi(uid, ck)
-    let sdk = api.getUrl('getFp')
-    let fpRes = await fetch(sdk.url, { headers: sdk.headers, method: 'POST', body: sdk.body })
-    fpRes = await fpRes.json()
-    let deviceFp = fpRes?.data?.device_fp
-    if (deviceFp) {
-      await redis.set(`STARRAIL:DEVICE_FP:${uid}`, deviceFp, { EX: 86400 * 7 })
-    }
+    let deviceFp = await api.getData('getFp')
+    deviceFp = deviceFp?.data?.device_fp
     const { url, headers } = api.getUrl('srRogueLocust', { deviceFp })
     delete headers['x-rpc-page']
     logger.debug({ url, headers })

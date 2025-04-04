@@ -1,3 +1,13 @@
+## 说明
+1、本仓库安装方式。
+```
+git clone --depth=1 https://github.com/kissnavel/SR-plugin.git ./plugins/StarRail-plugin
+```
+2、原仓库：<a href="https://github.com/TsukinaKasumi/StarRail-plugin">StarRail-plugin</a>，本仓库修改了部分功能，大部分功能与使用方式原仓库保持一致。
+
+3、绑定设备需配合<a href="https://github.com/kissnavel/genshin">genshin</a>使用。
+
+## 下面是原仓库说明
 ![logo](https://user-images.githubusercontent.com/21212372/235622221-7c5a5721-784b-4a31-9b24-60c88663548f.png)
 
 <div align=center> <h1>云崽QQ机器人的《崩坏：星穹铁道》插件</h1> </div>

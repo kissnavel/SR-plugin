@@ -11,9 +11,9 @@ export function supportGuoba () {
     pluginInfo: {
       name: 'StarRail-plugin',
       title: '星穹铁道插件',
-      author: '@鹤望兰',
-      authorLink: 'https://gitee.com/hewang1an',
-      link: 'https://gitee.com/hewang1an/StarRail-plugin',
+      author: '@kissnavel',
+      authorLink: 'https://github.com/kissnavel',
+      link: 'https://github.com/kissnavel/SR-plugin',
       isV3: true,
       isV2: false,
       description: '提供崩坏星穹铁道相关查询功能',

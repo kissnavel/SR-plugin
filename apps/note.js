@@ -1,6 +1,5 @@
 import _ from 'lodash'
 import moment from 'moment'
-import fetch from 'node-fetch'
 import runtimeRender from '../common/runtimeRender.js'
 import User from '../../genshin/model/user.js'
 import MysSRApi from '../runtime/MysSRApi.js'
@@ -49,16 +48,8 @@ export class Note extends plugin {
     }
 
     let api = new MysSRApi(uid, ck)
-    let deviceFp = await redis.get(`STARRAIL:DEVICE_FP:${uid}`)
-    if (!deviceFp) {
-      let sdk = api.getUrl('getFp')
-      let res = await fetch(sdk.url, { headers: sdk.headers, method: 'POST', body: sdk.body })
-      let fpRes = await res.json()
-      deviceFp = fpRes?.data?.device_fp
-      if (deviceFp) {
-        await redis.set(`STARRAIL:DEVICE_FP:${uid}`, deviceFp, { EX: 86400 * 7 })
-      }
-    }
+    let deviceFp = await api.getData('getFp')
+    deviceFp = deviceFp?.data?.device_fp
 
     let signInfo = await api.getData('sign_info')
     if (!signInfo) return false
