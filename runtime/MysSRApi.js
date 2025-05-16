@@ -322,7 +322,7 @@ export default class MysSRApi extends MysApi {
         break
       case 10041:
       case 5003:
-        this.e.reply(`UID:${this.uid}，米游社账号异常，暂时无法查询`)
+        this.e.reply(`UID:${this.uid}，米游社账号异常，暂时无法查询，发送“#绑定设备帮助”查看如何绑定设备`)
         break
       case 10035:
       case 1034: {
