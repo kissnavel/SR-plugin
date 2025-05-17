@@ -27,7 +27,6 @@ export default class SRApiTool {
     const board = data?.board ?? 'kona'
     const deviceBrand = deviceInfo.split('/')[0]
     const deviceDisplay = deviceInfo.split('/')[3]
-    let Bbs_api = 'https://bbs-api.miyoushe.com/'
     let host, hostRecord, hostPublicData
     if (['prod_gf_cn', 'prod_qd_cn'].includes(this.server)) {
       host = 'https://api-takumi.mihoyo.com/'
@@ -148,28 +147,6 @@ export default class SRApiTool {
             region: 'prod_gf_cn'
           },
           dsSalt: 'web'
-        },
-        deviceLogin: {
-          url: `${Bbs_api}apihub/api/deviceLogin`,
-          body: {
-            app_version: '2.73.1',
-            device_id: data.deviceId,
-            device_name: `${deviceBrand}${modelName}`,
-            os_version: '33',
-            platform: 'Android',
-            registration_id: generateSeed(19)
-          }
-        },
-        saveDevice: {
-          url: `${Bbs_api}apihub/api/saveDevice`,
-          body: {
-            app_version: '2.73.1',
-            device_id: data.deviceId,
-            device_name: `${deviceBrand}${modelName}`,
-            os_version: '33',
-            platform: 'Android',
-            registration_id: generateSeed(19)
-          }
         }
       }
     }
