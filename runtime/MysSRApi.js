@@ -3,7 +3,6 @@ import md5 from 'md5'
 import _ from 'lodash'
 import crypto from 'crypto'
 import SRApiTool from './SRApiTool.js'
-import getDeviceFp from './getDeviceFp.js'
 // const DEVICE_ID = randomString(32).toUpperCase()
 const DEVICE_NAME = randomString(_.random(1, 10))
 export default class MysSRApi extends MysApi {
@@ -53,7 +52,7 @@ export default class MysSRApi extends MysApi {
     if (data.deviceFp) {
       headers['x-rpc-device_fp'] = data.deviceFp
       // 兼容喵崽
-      this._device_fp = { data: { device_fp: data.deviceFp }, retcode: 0 }
+      this._device_fp = { data: { device_fp: data.deviceFp } }
     }
 
     // 如果有设备ID，写入设备ID（传入的，这里是绑定设备方法1中的设备ID）
@@ -138,106 +137,6 @@ export default class MysSRApi extends MysApi {
       }
     }
     return { url, headers, body }
-  }
-
-  async getData(type, data = {}, cached = false) {
-    const uid = this.uid
-    const ck = this.cookie
-    const ltuid = ck.ltuid
-    if (!this._device_fp && !data?.headers?.['x-rpc-device_fp']) {
-      let { deviceFp } = await getDeviceFp.Fp(uid, ck)
-      this._device_fp = { data: { device_fp: deviceFp }, retcode: 0 }
-    }
-    if (type === 'getFp') return this._device_fp
-
-    if (ltuid) {
-      let bindInfo = await redis.get(`genshin:device_fp:${ltuid}:bind`)
-      if (bindInfo) {
-        try {
-          bindInfo = JSON.parse(bindInfo)
-          data = {
-            ...data,
-            productName: bindInfo?.deviceProduct,
-            deviceType: bindInfo?.deviceName,
-            modelName: bindInfo?.deviceModel,
-            oaid: bindInfo?.oaid,
-            osVersion: bindInfo?.androidVersion,
-            deviceInfo: bindInfo?.deviceFingerprint,
-            board: bindInfo?.deviceBoard
-          }
-        } catch (error) {
-          bindInfo = null
-        }
-      }
-      const device_fp = await redis.get(`genshin:device_fp:${ltuid}:fp`)
-      if (device_fp) {
-        data.deviceFp = device_fp
-        data.headers['x-rpc-device_fp'] = device_fp
-      }
-      const device_id = await redis.get(`genshin:device_fp:${ltuid}:id`)
-      if (device_id) {
-        data.deviceId = device_id
-        data.headers['x-rpc-device_id'] = device_id
-      }
-    }
-
-    let { url, headers, body } = this.getUrl(type, data)
-
-    if (!url) return false
-
-    let cacheKey = this.cacheKey(type, data)
-    let cahce = await redis.get(cacheKey)
-    if (cahce) return JSON.parse(cahce)
-
-    headers.Cookie = ck
-
-    if (data.headers) {
-      headers = { ...headers, ...data.headers }
-    }
-
-    if (type !== 'getFp' && !headers['x-rpc-device_fp'] && this._device_fp.data?.device_fp) {
-      headers['x-rpc-device_fp'] = this._device_fp.data.device_fp
-    }
-
-    let param = {
-      headers,
-      agent: await this.getAgent(),
-      timeout: 10000
-    }
-    if (body) {
-      param.method = 'post'
-      param.body = body
-    } else {
-      param.method = 'get'
-    }
-    let response = {}
-    let start = Date.now()
-    try {
-      response = await fetch(url, param)
-    } catch (error) {
-      logger.error(error.toString())
-      return false
-    }
-
-    if (!response.ok) {
-      logger.error(`[米游社接口][${type}][${this.uid}] ${response.status} ${response.statusText}`)
-      return false
-    }
-    if (this.option.log) {
-      logger.mark(`[米游社接口][${type}][${this.uid}] ${Date.now() - start}ms`)
-    }
-    const res = await response.json()
-
-    if (!res) {
-      logger.mark('mys接口没有返回')
-      return false
-    }
-
-    res.api = type
-
-    if (cached) this.cache(res, cacheKey)
-
-    return res
   }
 
   getDs (q = '', b = '') {
