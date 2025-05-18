@@ -125,8 +125,7 @@ export default class MysSRApi extends MysApi {
   }
 
 
-  async getData(type, data = {}, cached = false) {
-    if (!data?.headers) data.headers = {}
+  async getData(type, data = { headers: '' }, cached = false) {
     const ck = this.cookie
     const ltuid = ck.ltuid
     if (ltuid) {
