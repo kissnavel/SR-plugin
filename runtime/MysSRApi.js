@@ -83,21 +83,6 @@ export default class MysSRApi extends MysApi {
       }
     }
 
-    if (type == 'deviceLogin' || type == 'saveDevice') {
-      try {
-        headers['x-rpc-sys_version'] = '12'
-        headers['x-rpc-client_type'] = '2'
-        headers['x-rpc-channel'] = 'miyousheluodi'
-        headers['x-rpc-csm_source'] = 'home'
-        headers['Host'] = 'bbs-api.miyoushe.com'
-        headers['User-Agent'] = 'okhttp/4.9.3'
-        headers['Referer'] = 'https://app.mihoyo.com/'
-        headers['DS'] = this.getDs2()
-      } catch (error) {
-        logger.error(`[starrail]设备信息解析失败：${error.message}`)
-      }
-    }
-
     if (!data.deviceId) {
       headers['x-rpc-device_id'] = this._device
     }
@@ -137,6 +122,108 @@ export default class MysSRApi extends MysApi {
       }
     }
     return { url, headers, body }
+  }
+
+
+  async getData(type, data = {}, cached = false) {
+    if (!data?.headers) data.headers = {}
+    const ck = this.cookie
+    const ltuid = ck.ltuid
+    if (ltuid) {
+      let bindInfo = await redis.get(`genshin:device_fp:${ltuid}:bind`)
+      if (bindInfo) {
+        try {
+          bindInfo = JSON.parse(bindInfo)
+          data = {
+            ...data,
+            productName: bindInfo?.deviceProduct,
+            deviceType: bindInfo?.deviceName,
+            modelName: bindInfo?.deviceModel,
+            oaid: bindInfo?.oaid,
+            osVersion: bindInfo?.androidVersion,
+            deviceInfo: bindInfo?.deviceFingerprint,
+            board: bindInfo?.deviceBoard
+          }
+        } catch (error) {
+          bindInfo = null
+        }
+      }
+      const device_fp = await redis.get(`genshin:device_fp:${ltuid}:fp`)
+      if (device_fp) {
+        data.deviceFp = device_fp
+        data.headers['x-rpc-device_fp'] = device_fp
+      }
+      const device_id = await redis.get(`genshin:device_fp:${ltuid}:id`)
+      if (device_id) {
+        data.deviceId = device_id
+        data.headers['x-rpc-device_id'] = device_id
+      }
+    }
+    if (!this._device_fp && !data?.Getfp && !data?.headers?.['x-rpc-device_fp']) {
+      this._device_fp = await this.getData('getFp', {
+        ...data,
+        Getfp: true
+      })
+    }
+    if (type === 'getFp' && !data?.Getfp) return this._device_fp
+
+    let { url, headers, body } = this.getUrl(type, data)
+
+    if (!url) return false
+
+    let cacheKey = this.cacheKey(type, data)
+    let cahce = await redis.get(cacheKey)
+    if (cahce) return JSON.parse(cahce)
+
+    headers.Cookie = ck
+
+    if (data.headers) {
+      headers = { ...headers, ...data.headers }
+    }
+
+    if (type !== 'getFp' && !headers['x-rpc-device_fp'] && this._device_fp.data?.device_fp) {
+      headers['x-rpc-device_fp'] = this._device_fp.data.device_fp
+    }
+
+    let param = {
+      headers,
+      agent: await this.getAgent(),
+      timeout: 10000
+    }
+    if (body) {
+      param.method = 'post'
+      param.body = body
+    } else {
+      param.method = 'get'
+    }
+    let response = {}
+    let start = Date.now()
+    try {
+      response = await fetch(url, param)
+    } catch (error) {
+      logger.error(error.toString())
+      return false
+    }
+
+    if (!response.ok) {
+      logger.error(`[米游社接口][${type}][${this.uid}] ${response.status} ${response.statusText}`)
+      return false
+    }
+    if (this.option.log) {
+      logger.mark(`[米游社接口][${type}][${this.uid}] ${Date.now() - start}ms`)
+    }
+    const res = await response.json()
+
+    if (!res) {
+      logger.mark('mys接口没有返回')
+      return false
+    }
+
+    res.api = type
+
+    if (cached) this.cache(res, cacheKey)
+
+    return res
   }
 
   getDs (q = '', b = '') {
