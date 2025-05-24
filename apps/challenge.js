@@ -5,7 +5,7 @@ import MysSRApi from '../runtime/MysSRApi.js'
 import setting from '../utils/setting.js'
 import { getCk, rulePrefix } from '../utils/common.js'
 import runtimeRender from '../common/runtimeRender.js'
-import GsCfg from '../../genshin/model/gsCfg.js'
+import MysInfo from '../../genshin/model/mys/mysInfo.js'
 
 export class Challenge extends plugin {
   constructor (e) {
@@ -48,7 +48,7 @@ export class Challenge extends plugin {
 
     if (all !== true) {
       uid = await this.userUid(e)
-      ck = await this.userCk(e)
+      ck = await this.userCk(e, uid)
     }
 
     let scheduleType = '1'
@@ -57,14 +57,7 @@ export class Challenge extends plugin {
     }
 
     let api = new MysSRApi(uid, ck)
-    if (all !== true) {
-      device_fp = await api.getData('getFp')
-      let userData = await api.getData('srUser')
-      if (!userData?.data || _.isEmpty(userData.data.list)) {
-        await e.reply('无法查询星铁深渊信息，请确认绑定的cookie是否有效')
-        return false
-      }
-    }
+    if (all !== true) device_fp = await api.getData('getFp')
     let headers = { 'x-rpc-device_fp': device_fp?.data?.device_fp }
 
     let challengeData, res, simpleRes
@@ -88,10 +81,7 @@ export class Challenge extends plugin {
       simpleRes = await api.getData(simpleRequestType, { headers, schedule_type: scheduleType })
       simpleRes = await api.checkCode(this.e, simpleRes, simpleRequestType, { headers, schedule_type: scheduleType })
       // 连简单的也出验证码，打住
-      if (simpleRes.retcode !== 0) {
-        await e.reply('星铁深渊信息出现验证码，无法查询')
-        return false
-      }
+      if (simpleRes.retcode !== 0) return false
     }
     if (!simple && res.retcode === 0) {
       challengeData = res
@@ -182,14 +172,9 @@ export class Challenge extends plugin {
   async challenge (e) {
     await e.reply('正在获取全部深渊数据，请稍后……')
     let uid = await this.userUid(e)
-    let ck = await this.userCk(e)
+    let ck = await this.userCk(e, uid)
     let api = new MysSRApi(uid, ck)
     let device_fp = await api.getData('getFp')
-    let userData = await api.getData('srUser')
-    if (!userData?.data || _.isEmpty(userData.data.list)) {
-      await e.reply('无法查询星铁深渊信息，请确认绑定的cookie是否有效')
-      return false
-    }
     let hall = await this.queryChallenge(e, 2, true, uid, ck, device_fp)
     if (!hall) return false
     let story = await this.queryChallenge(e, 1, true, uid, ck, device_fp)
@@ -277,14 +262,12 @@ export class Challenge extends plugin {
     return uid
   }
 
-  async userCk (e) {
-    let ck = await getCk(e)
-    if (!ck || Object.keys(ck).filter(k => ck[k].ck).length === 0) {
-      let ckArr = GsCfg.getConfig('mys', 'pubCk') || []
-      ck = ckArr[0]
-    }
+  async userCk (e, uid) {
+    let game = e.game
+    let ck = await MysInfo.checkUidBing(uid, game)
+    ck = ck.ck
     if (!ck) {
-      await e.reply(`尚未绑定Cookie,${this.app2config.docs}`)
+      await e.reply(`uid:${uid}当前尚未绑定Cookie，${this.app2config.docs}`)
       return false
     }
 
