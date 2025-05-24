@@ -41,7 +41,7 @@ export class Challenge extends plugin {
     this.User = new User(e)
   }
 
-  async queryChallenge (e, challengeType, all, uid, ck) {
+  async queryChallenge (e, challengeType, all, uid, ck, device_fp) {
     this.e.isSr = true
     this.isSr = true
     const simple = this.e.msg.match('简易')
@@ -58,14 +58,14 @@ export class Challenge extends plugin {
 
     let api = new MysSRApi(uid, ck)
     if (all !== true) {
+      device_fp = await api.getData('getFp')
       let userData = await api.getData('srUser')
       if (!userData?.data || _.isEmpty(userData.data.list)) {
         await e.reply('无法查询星铁深渊信息，请确认绑定的cookie是否有效')
         return false
       }
     }
-    let deviceFp = await api.getData('getFp')
-    deviceFp = deviceFp?.data?.device_fp
+    let headers = { 'x-rpc-device_fp': device_fp?.data?.device_fp }
 
     let challengeData, res, simpleRes
     // 先查详细的
@@ -75,8 +75,8 @@ export class Challenge extends plugin {
         'srChallengeStory',
         'srChallenge'
       ][challengeType]
-      res = await api.getData(requestType, { deviceFp, schedule_type: scheduleType })
-      res = await api.checkCode(this.e, res, requestType, { deviceFp, schedule_type: scheduleType })
+      res = await api.getData(requestType, { headers, schedule_type: scheduleType })
+      res = await api.checkCode(this.e, res, requestType, { headers, schedule_type: scheduleType })
     }
     if (simple || res.retcode !== 0) {
       // 详细的出验证码了，查简单的
@@ -85,8 +85,8 @@ export class Challenge extends plugin {
         'srChallengeStorySimple',
         'srChallengeSimple'
       ][challengeType]
-      simpleRes = await api.getData(simpleRequestType, { deviceFp, schedule_type: scheduleType })
-      simpleRes = await api.checkCode(this.e, simpleRes, simpleRequestType, { deviceFp, schedule_type: scheduleType })
+      simpleRes = await api.getData(simpleRequestType, { headers, schedule_type: scheduleType })
+      simpleRes = await api.checkCode(this.e, simpleRes, simpleRequestType, { headers, schedule_type: scheduleType })
       // 连简单的也出验证码，打住
       if (simpleRes.retcode !== 0) {
         await e.reply('星铁深渊信息出现验证码，无法查询')
@@ -184,16 +184,17 @@ export class Challenge extends plugin {
     let uid = await this.userUid(e)
     let ck = await this.userCk(e)
     let api = new MysSRApi(uid, ck)
+    let device_fp = await api.getData('getFp')
     let userData = await api.getData('srUser')
     if (!userData?.data || _.isEmpty(userData.data.list)) {
       await e.reply('无法查询星铁深渊信息，请确认绑定的cookie是否有效')
       return false
     }
-    let hall = await this.queryChallenge(e, 2, true, uid, ck)
+    let hall = await this.queryChallenge(e, 2, true, uid, ck, device_fp)
     if (!hall) return false
-    let story = await this.queryChallenge(e, 1, true, uid, ck)
+    let story = await this.queryChallenge(e, 1, true, uid, ck, device_fp)
     if (!story) return false
-    let boss = await this.queryChallenge(e, 0, true, uid, ck)
+    let boss = await this.queryChallenge(e, 0, true, uid, ck, device_fp)
     if (!boss) return false
     let res = { hall, story, boss }
     await runtimeRender(e, '/challenge/index_all.html', res)
