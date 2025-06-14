@@ -3,6 +3,7 @@ import md5 from 'md5'
 import _ from 'lodash'
 import crypto from 'crypto'
 import SRApiTool from './SRApiTool.js'
+import getDeviceFp from './getDeviceFp.js'
 // const DEVICE_ID = randomString(32).toUpperCase()
 const DEVICE_NAME = randomString(_.random(1, 10))
 export default class MysSRApi extends MysApi {
@@ -126,6 +127,7 @@ export default class MysSRApi extends MysApi {
 
 
   async getData(type, data = { headers: {} }, cached = false) {
+    const uid = this.uid
     const ck = this.cookie
     const ltuid = ck.ltuid
     if (ltuid) {
@@ -147,10 +149,10 @@ export default class MysSRApi extends MysApi {
           bindInfo = null
         }
       }
-      const device_fp = await redis.get(`genshin:device_fp:${ltuid}:fp`)
-      if (device_fp) {
-        data.deviceFp = device_fp
-        data.headers['x-rpc-device_fp'] = device_fp
+      const { deviceFp } = await getDeviceFp.Fp(uid, ck)
+      if (deviceFp) {
+        data.deviceFp = deviceFp
+        data.headers['x-rpc-device_fp'] = deviceFp
       }
       const device_id = await redis.get(`genshin:device_fp:${ltuid}:id`)
       if (device_id) {

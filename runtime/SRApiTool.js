@@ -147,6 +147,28 @@ export default class SRApiTool {
             region: 'prod_gf_cn'
           },
           dsSalt: 'web'
+        },
+        deviceLogin: {
+          url: 'https://bbs-api.miyoushe.com/apihub/api/deviceLogin',
+          body: {
+            app_version: '2.73.1',
+            device_id: data.deviceId,
+            device_name: `${deviceBrand}${modelName}`,
+            os_version: '33',
+            platform: 'Android',
+            registration_id: generateSeed(19)
+          }
+        },
+        saveDevice: {
+          url: 'https://bbs-api.miyoushe.com/apihub/api/saveDevice',
+          body: {
+            app_version: '2.73.1',
+            device_id: data.deviceId,
+            device_name: `${deviceBrand}${modelName}`,
+            os_version: '33',
+            platform: 'Android',
+            registration_id: generateSeed(19)
+          }
         }
       }
     }
